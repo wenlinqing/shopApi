@@ -213,6 +213,7 @@ router.post('/api/regist', (req, res, next) => {
                     username: req.body.username,
                     mobile: req.body.mobile,
                     password: req.body.password,
+                    tradePwd: req.body.tradePwd,
                     roleType:'web',// users表中 roleType=web为普通用户  roleType=admin为系统管理员
                     create_time: moment().format('YYYY-MM-DD HH:mm:ss'),
                 }

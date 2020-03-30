@@ -137,7 +137,7 @@ router.post('/order',(req,res,next)=>{
 		// return
 	}
 	
-	//订单状态 0待送货 1送货中 2成功 3用户取消 4骑手取消(用户不要了)
+	//订单类型 0待送货 1送货中 2成功 3全部
 	if (orderTag==0) {// 待配送
 		var sql=`select * from order_order where status=0`;
 	}else if (orderTag==1) {// 配送中
@@ -170,6 +170,7 @@ router.post('/order',(req,res,next)=>{
 router.post('/cancelOrder',(req,res,next)=>{
 	var orderNo=req.body.orderNo;
 	var actions=req.body.actions;
+	var obj=req.body.items;
 	var actionList=[0]
 	if (actionList.indexOf(actions)==-1||!req.body.orderNo) {// 不存在 中断 防止别人瞎搞
 		return res.json({
@@ -178,28 +179,61 @@ router.post('/cancelOrder',(req,res,next)=>{
 		})
 		// return
 	}
+	async.waterfall([
+	    function(callback){
+	    	if (obj.payWay==0) {
+	    		callback(null,1)
+	    	}else if (obj.payWay==1) {
+				var updateSql = `update users set amount_available=amount_available+${obj.totalPrice},used_amount=used_amount-${obj.totalPrice} where userId=${obj.userId}`;
+				db.connection.query(updateSql, (error, results) => {
+					if (error) {
+						console.log(error)
+						callback(new Error("system error"));
+						return res.json({
+							code: '500',
+							msg: '系统错误'
+						})
+					}
+					callback(null,'user money return back');
+				})
+	    	}else{
+	    		callback(new Error("order not exits"));
+	    		return res.json({
+					code:'504',
+					msg:'参数错误'
+				})
+	    	}
+	    },
+	    function(data,callback){
+	    	//用户不要了 取消订单
+			var _where = {orderNo : req.body.orderNo};
+		    var _set = {
+		        status:3,
+		        isDelive:1,
+		        delive_time:moment().format('YYYY-MM-DD HH:mm:ss')
+		    };
 
-	//用户不要了 取消订单
-	var _where = {orderNo : req.body.orderNo};
-    var _set = {
-        status:3,
-        isDelive:1,
-        delive_time:moment().format('YYYY-MM-DD HH:mm:ss')
-    };
-
-    db.updateData('order_order',_set,_where,(err,result)=>{
-		if (err) {
-			console.log(err)
-			return res.json({
-				code:'500',
-				msg:'系统错误'
+		    db.updateData('order_order',_set,_where,(err,result)=>{
+				if (err) {
+					console.log(err)
+					return res.json({
+						code:'500',
+						msg:'系统错误'
+					})
+				}
+				res.json({
+					code:'200',
+					msg:'ok'
+				})
 			})
-		}
-		res.json({
-			code:'200',
-			msg:'ok'
-		})
-	})
+	    },
+	], function(err, results){
+	    if (err) {
+		   console.log('err err err',err);
+	    }else{
+			console.log('results',results);
+	    }
+	});	
 })
 
 

@@ -168,7 +168,7 @@ router.post('/createOrder',(req,res,next)=>{
 			callback(null,'oks');
 	    },
 	    function(txt,callback){
-	    	if (req.body.payway==1) {
+	    	if (req.body.payway==1) {// 用户余额支付 账户需减去总金额
 	    		var updateSql = `update users set amount_available=amount_available-${req.body.totalPrice},used_amount=used_amount+${req.body.totalPrice} where userId=${req.body.userId}`;
 			    db.connection.query(updateSql, (error, results) => {
 			        if (error) {
@@ -247,9 +247,10 @@ router.post('/riderOrder',(req,res,next)=>{
 
 //////////////////////////////////////////////////////////////////////////////////////////////
 
-// 用户取消订单  或者 骑手对订单操作
+// 骑手对订单操作 骑手对订单操作 骑手对订单操作 骑手对订单操作 骑手对订单操作
 router.post('/rider/orderAction',(req,res,next)=>{
 	var action=req.body.actions
+	var obj=req.body.items||'';
 	var actionList=[1,2,4]
 	if (!req.body.riderId||actionList.indexOf(action)==-1||req.body.orderNo=='') {// 不存在 中断 防止别人瞎搞
 		return res.json({
@@ -279,7 +280,7 @@ router.post('/rider/orderAction',(req,res,next)=>{
 				}else if (status==1&&isDelive==0&&(action==2||action==4)) {// 订单还没完成  继续往下走
 					callback(null,'ok');
 				}else{// 订单已完成  记录被人恶搞次数
-					var updateSql = `update riders set illegal_operations=illegal_operations+1 where riderId=${req.body.riderId}`;
+					/*var updateSql = `update riders set illegal_operations=illegal_operations+1 where riderId=${req.body.riderId}`;
 				    db.connection.query(updateSql, (error, results) => {
 				        if (error) {
 				            console.log(error)
@@ -295,7 +296,12 @@ router.post('/rider/orderAction',(req,res,next)=>{
 							code:'500',
 							msg:'请勿非法操作，否则收益将冻结'
 						})
-				    })
+				    })*/
+				    callback(new Error("Do not operate illegally"));
+			        return res.json({
+						code:'500',
+						msg:'该订单已失效'
+					})
 				}
 			})
 	    },
@@ -319,7 +325,7 @@ router.post('/rider/orderAction',(req,res,next)=>{
 			        delive_time:moment().format('YYYY-MM-DD HH:mm:ss')
 			    };
 			}
-			if (action==4) {//用户不要了  骑手取消
+			if (action==4) {//用户不要了  骑手取消订单
 				var _where = {orderNo : req.body.orderNo};
 			    var _set = {
 			        status:4,
@@ -344,15 +350,45 @@ router.post('/rider/orderAction',(req,res,next)=>{
 						msg:'ok'
 					})
 				}
-				if (action==4) {
-					callback(new Error("Rider cancelled"));
-					res.json({
-						code:'200',
-						msg:'ok'
+				if (action==4) {// 用户不要了   骑手取消订单  用户金额退回账户
+					var updateSql = `update users set amount_available=amount_available+${obj.totalPrice},used_amount=used_amount-${obj.totalPrice} where userId=${obj.userId}`;
+					db.connection.query(updateSql, (error, results) => {
+						if (error) {
+							console.log(error)
+							callback(new Error("system error"));
+							return res.json({
+								code: '500',
+								msg: '系统错误'
+							})
+						}
+						res.json({
+							code:'200',
+							msg:'ok'
+						})
+						callback(new Error("Rider cancelled"));
 					})
 				}
-				if (action==2) {
-					callback(null,2);
+				if (action==2) {// 配送成功  接下来记录用户消费情况 和 分配骑手收益
+					var saveDate={
+			    		orderNo:'No'+(moment().format('YYMMDD')).toString() + Date.now().toString().substr(0,12),
+						userId:req.body.userId,
+						money:obj.totalPrice,// 消费金额
+						remark:'购物消费',
+						type:2,// 1 充值  2消费
+						status:2,// 充值：1待审核 2成功  3失败
+						create_time:moment().format('YYYY-MM-DD HH:mm:ss'),
+					}
+					db.insertData('user_assets_detail',saveDate,(err,result)=>{
+						if (err) {
+							console.log('error=====',err)
+							callback(new Error("user recharge failed"));
+							return res.json({
+								code:'500',
+								msg:'系统错误'
+							})
+						}
+						callback(null,1);
+					})
 				}
 			})
 	    },
