@@ -4,6 +4,89 @@ var moment = require('moment');
 var db = require('../mysql/mysql.js');
 var async = require("async");
 
+// 后台 获取订单列表 后台 获取订单列表 后台 获取订单列表 后台 获取订单列表 后台 获取订单列表
+router.post('/admin/getOrderList', function(req, res, next) {
+	var page=req.body.page||1;
+	var pageSize=req.body.pageSize||10;
+	var orderNo=req.body.orderNo||'';
+	var status=req.body.status||'';
+	if (req.body.status==undefined) {// 不存在 中断 防止别人瞎搞
+		res.json({
+			code:'504',
+			msg:'参数错误'
+		})
+		return
+	}
+
+	// console.log(req.body)
+	var sqlAll=`select count(1) as total from order_order `;
+	var total = '';
+	if (orderNo!='') {
+		sqlAll+=`  where orderNo=${orderNo}`
+		if (status!='') {
+			sqlAll+=`  and status=${status}`
+		}
+	}else if (orderNo=='') {
+		if (status!='') {
+			sqlAll+=` where status=${status}`
+		}
+	}
+	db.selectAll(sqlAll,(err,result)=>{
+		if (err) {
+			console.log(err)
+			return res.json({
+				code:'500',
+				msg:'系统错误'
+			})
+		}
+		total=result[0].total;
+
+		if (total==0) {
+			res.json({
+				code:'200',
+				page:page,
+				pageSize:pageSize,
+				totals:total,
+				list:[],
+				msg:'ok'
+			})
+			return
+		}
+
+		var sql=`select * from order_order `;
+		if (orderNo!='') {
+			sql+=`where orderNo=${orderNo}`;
+			if (status!='') {
+				sql+=` and status=${status}`;
+			}
+		}else if(orderNo==''){
+			if (status!='') {
+				sql+=` where status=${status}`;
+			}
+		}
+		sql+=` order by create_time desc limit `+ (page-1)*pageSize+`,`+pageSize;
+		db.selectAll(sql,(err,result)=>{
+			if (err) {
+				console.log(err)
+				return res.json({
+					code:'500',
+					msg:'系统错误'
+				})
+			}
+
+			res.json({
+				code:'200',
+				page:page,
+				pageSize:pageSize,
+				totals:total,
+				list:result,
+				msg:'ok'
+			})
+		})
+	})
+});
+
+
 
 // 用户下单
 router.post('/createOrder',(req,res,next)=>{
@@ -200,7 +283,7 @@ router.post('/createOrder',(req,res,next)=>{
 })
 
 
-// 按状态 查询订单
+// 骑手 按状态 查询订单 骑手 按状态 查询订单 骑手 按状态 查询订单 骑手 按状态 查询订单
 router.post('/riderOrder',(req,res,next)=>{
 	var riderId=req.body.riderId;
 	var orderTag=req.body.orderTag;

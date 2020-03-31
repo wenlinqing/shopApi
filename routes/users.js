@@ -4,6 +4,7 @@ var moment = require('moment');
 var db = require('../mysql/mysql.js');
 var async = require("async");
 
+// 后台 获取用户列表 后台 获取用户列表 后台 获取用户列表 后台 获取用户列表 后台 获取用户列表
 router.post('/getDataList', function(req, res, next) {
 	var page=req.body.page||1;
 	var pageSize=req.body.pageSize||10;
@@ -97,7 +98,7 @@ router.post('/enabledUser',(req,res,next)=>{
 	})
 })
 
-// 用户资产信息
+// 用户资产信息 用户资产信息 用户资产信息 用户资产信息 用户资产信息 用户资产信息 用户资产信息
 router.post('/userAssets',(req,res,next)=>{
 	if (!req.body.userId ) {
 		res.json({
@@ -350,7 +351,7 @@ router.post('/web/recharge',(req,res,next)=>{
 
 
 // 用户充值申请记录 用户充值申请记录 用户充值申请记录 用户充值申请记录 用户充值申请记录 用户充值申请记录 用户充值申请记录 用户充值申请记录
-router.post('/web/rechargeList',(req,res,next)=>{
+router.post('/web/userAssetsDetail',(req,res,next)=>{
 	var types=req.headers['authorization'];
 	if (types!='admin') {// 用户自查
 		if (!req.body.userId) {
