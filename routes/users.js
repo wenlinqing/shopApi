@@ -523,7 +523,7 @@ router.post('/admin/rechargeCheck',(req,res,next)=>{
 
 
 
-// 用户问题反馈
+// 用户问题反馈 用户问题反馈 用户问题反馈 用户问题反馈 用户问题反馈 用户问题反馈 用户问题反馈 用户问题反馈
 
 router.post('/feedback',(req,res,next)=>{
 	if (!req.body.userId|| !req.body.content) {// 不存在 中断 防止别人瞎搞
@@ -555,6 +555,228 @@ router.post('/feedback',(req,res,next)=>{
 
 })
 
+
+// 用户领取红包记录 用户领取红包记录 用户领取红包记录 用户领取红包记录 用户领取红包记录 用户领取红包记录
+
+router.post('/admin/getRedList',(req,res,next)=>{
+	var page=req.body.page||1;
+	var pageSize=req.body.pageSize||10;
+	var userId=req.body.userId||''
+
+	var sqlAll=`select count(1) as total from red_list `;
+	if (userId!='') {
+		sqlAll+=` where userId=${userId}`
+	}
+	db.selectAll(sqlAll,(err,result)=>{
+		if (err) {
+			console.log(err)
+			return res.json({
+				code:'500',
+				msg:'系统错误'
+			})
+		}
+		total=result[0].total;
+
+		if (total==0) {
+			console.log('no red data11111')
+			return res.json({
+				code:'200',
+				page:page,
+				pageSize:pageSize,
+				totals:total,
+				list:[],
+				msg:'ok'
+			})
+			console.log('no red data22222')
+		}
+
+		var sql=`select red.userId,red.money,red.create_time,u.username,u.mobile from red_list red inner jion users u `;
+		if (userId!='') {
+			sql+=`where userId=${userId} order by red.create_time desc limit `+ (page-1)*pageSize+`,`+pageSize;
+		}else{
+			sql+=`order by red.create_time desc limit `+ (page-1)*pageSize+`,`+pageSize;
+		}
+		db.selectAll(sql,(err,result)=>{
+			if (err) {
+				console.log(err)
+				return res.json({
+					code:'500',
+					msg:'系统错误'
+				})
+			}
+			res.json({
+				code:'200',
+				page:page,
+				pageSize:pageSize,
+				totals:total,
+				list:result,
+				msg:'ok'
+			})
+		})
+	})
+})
+
+
+// 用户领取红包 用户领取红包 用户领取红包 用户领取红包 用户领取红包 用户领取红包 用户领取红包
+router.post('/web/getReds',(req,res,next)=>{
+	if (!req.body.userId ) {
+		res.json({
+			code:'504',
+			msg:'参数错误'
+		})
+		return
+	}
+	var userId=req.body.userId
+	async.waterfall([
+	    function(callback){
+	        var sqlAll=`select red_activity from systems `;
+			db.selectAll(sqlAll,(err,result)=>{
+				if (err) {
+					console.log(err)
+					return res.json({
+						code:'500',
+						msg:'系统错误'
+					})
+				}
+				red_activity=result[0].red_activity;
+
+				if (red_activity==0) {
+					console.log('no red active')
+					callback(new Error("red active not start"));
+					return res.json({
+						code:'500',
+						msg:'红包活动未开始'
+					})
+				}
+				callback(null,1);
+	        })
+	    },
+	    function(data, callback){
+	       var sqlAll=`select count(1) as total from users where userId=${userId}`;
+			db.selectAll(sqlAll,(err,result)=>{
+				if (err) {
+					console.log(err)
+					return res.json({
+						code:'500',
+						msg:'系统错误'
+					})
+				}
+				total=result[0].total;
+
+				if (total==0) {
+					console.log('use not exit')
+					callback(new Error("use not exits"));
+					return res.json({
+						code:'500',
+						msg:'用户不存在'
+					})
+				}
+				callback(null,2);// 用户存在 继续往下走
+			})
+	    },
+	    function(data, callback){ // 判断用户 今天是否领过了
+	       /*var sqlAll=`select count(1) as total from red_list where userId=${userId} and create_time between '`+moment().format('YYYY-MM-DD 00:00:00')+ `' and '` + moment().format('YYYY-MM-DD 23:59:59') + `'`;
+			db.selectAll(sqlAll,(err,result)=>{
+				if (err) {
+					console.log(err)
+					return res.json({
+						code:'500',
+						msg:'系统错误'
+					})
+				}
+				total=result[0].total;
+				if (total!=0) {// 今日红包记录已存在
+					console.log('use has get red')
+					callback(new Error("use has get red"));
+					return res.json({
+						code:'500',
+						msg:'今日红包已领取'
+					})
+				}
+				callback(null,2);// 今日没领过红包 继续往下走
+			})*/
+			callback(null,2);// 今日没领过红包 继续往下走
+	    },
+	    function(n, callback){
+	        var min = Math.ceil(1);
+	        var max = Math.floor(100);
+	        var money = Math.floor(Math.random() * (max - min + 1)) + min; //含最大值100，含最小值1
+	        money = parseInt(money, 10)/10;// 红包金额
+
+	        var saveDate={
+	    		redNo:'No'+(moment().format('YYMMDD')).toString() + Date.now().toString().substr(0,12),
+				userId:req.body.userId,
+				money:money,// 红包金额
+				create_time:moment().format('YYYY-MM-DD HH:mm:ss'),
+			}
+			db.insertData('red_list',saveDate,(err,result)=>{
+				if (err) {
+					console.log('error=====',err)
+					callback(new Error("user recharge failed"));
+					return res.json({
+						code:'500',
+						msg:'系统错误'
+					})
+				}
+				// callback(new Error("stop stop stop"));
+				// res.json({
+				// 	code:'200',
+				// 	msg:'ok'
+				// })
+				callback(null,money);
+			})
+	    },
+	    function(money,callback){// 更新用户可用资产
+			var updateSql = `update users set amount_available=amount_available+${money} where userId=${req.body.userId}`;
+		    db.connection.query(updateSql, (error, results) => {
+		        if (error) {
+		            console.log(error)
+		            callback(new Error("user assets add failed"));
+		            return res.json({
+		                code: '500',
+		                msg: '系统错误'
+		            })
+		        }
+		        callback(null,money);
+		    })
+	    },
+	    function(money, callback){ // 红包记录加到用户资产记录
+	        var saveDate={
+	    		orderNo:'No'+(moment().format('YYMMDD')).toString() + Date.now().toString().substr(0,12),
+				userId:req.body.userId,
+				money:money,// 红包金额
+				remark:'红包抽奖',
+				type:3,// 1 充值  2消费 3领取红包
+				status:2,// 充值：1待审核 2成功  3失败
+				create_time:moment().format('YYYY-MM-DD HH:mm:ss'),
+			}
+			db.insertData('user_assets_detail',saveDate,(err,result)=>{
+				if (err) {
+					console.log('error=====',err)
+					callback(new Error("user recharge failed"));
+					return res.json({
+						code:'500',
+						msg:'系统错误'
+					})
+				}
+				callback(null,1);
+				res.json({
+					code:'200',
+					data:money,
+					msg:'ok'
+				})
+			})
+	    }
+	], function(err, results){
+	    if (err) {
+	       console.log('err err err',err);
+	    }else{
+	        console.log('results',results);
+	    }
+	}); 
+
+
+})
 
 
 

@@ -54,10 +54,8 @@ app.use('/shopApi/', require('./routes/index'));
 app.use('/shopApi/api/users', require('./routes/users'));
 app.use('/shopApi/api/product', require('./routes/product'));
 app.use('/shopApi/api/order', require('./routes/order'));
-// app.use('/api/enterprise', require('./routes/enterprise'));
-// app.use('/api/banner', require('./routes/banner'));
-// app.use('/api/comment', require('./routes/comment'));
 app.use('/shopApi/api/riders', require('./routes/riders'))
+app.use('/shopApi/api/systems', require('./routes/systems'));
 
 
 // catch 404 and forward to error handler
@@ -75,6 +73,18 @@ app.use(function (err, req, res, next) {
     res.status(err.status || 500);
     res.render('error');
 });
+
+
+var moment = require('moment');
+var schedule = require('node-schedule');
+
+function scheduleCronstyle(){
+    schedule.scheduleJob('40 30 11 2 4 *', function(){
+        console.log('scheduleCronstyle:' + moment().format('YYYY-MM-DD HH:mm:ss'));
+    });  
+}
+scheduleCronstyle();
+
 
 
 module.exports = app;
