@@ -295,12 +295,12 @@ router.post('/applyForWithdrawal',(req,res,next)=>{
 					callback(new Error("system error"));
 					res.json({
 						code:'500',
-						msg:'提现金额不能超过可用金额'
+						msg:'可用金额不足'
 					})
 				}
 			})
 		},
-		function(text,callback){
+		/*function(text,callback){
 			var sql=`select withdrawalMoney from systems`;
 			db.selectAll(sql,(err,result)=>{
 				if (err) {
@@ -321,7 +321,7 @@ router.post('/applyForWithdrawal',(req,res,next)=>{
 					})
 				}
 			})
-		},
+		},*/
 		function(text, callback){// 提现申请成功
 			// console.log('Withdrawal application amount===',req.body.money)
 			var saveDate={

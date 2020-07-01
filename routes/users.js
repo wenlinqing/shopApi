@@ -675,7 +675,7 @@ router.post('/web/getReds',(req,res,next)=>{
 			})
 	    },
 	    function(data, callback){ // 判断用户 今天是否领过了
-	       /*var sqlAll=`select count(1) as total from red_list where userId=${userId} and create_time between '`+moment().format('YYYY-MM-DD 00:00:00')+ `' and '` + moment().format('YYYY-MM-DD 23:59:59') + `'`;
+	        var sqlAll=`select count(1) as total from red_list where userId=${userId} and create_time between '`+moment().format('YYYY-MM-DD 00:00:00')+ `' and '` + moment().format('YYYY-MM-DD 23:59:59') + `'`;
 			db.selectAll(sqlAll,(err,result)=>{
 				if (err) {
 					console.log(err)
@@ -694,8 +694,8 @@ router.post('/web/getReds',(req,res,next)=>{
 					})
 				}
 				callback(null,2);// 今日没领过红包 继续往下走
-			})*/
-			callback(null,2);// 今日没领过红包 继续往下走
+			})
+			// callback(null,2);// 今日没领过红包 继续往下走
 	    },
 	    function(n, callback){
 	        var min = Math.ceil(1);

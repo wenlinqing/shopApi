@@ -155,22 +155,61 @@ router.post('/startRed',(req,res,next)=>{
 })
 
 router.post('/getRedParama',(req,res,next)=>{
-    var sql=`select withdrawalMoney,red_activity,red_startTime,red_endTime from systems`
-    db.selectAll(sql,(err1,result)=>{
-        if (err1) {
-            console.log(err1)
-            callback(new Error("system error"));
-            return res.json({
-                code:'500',
-                msg:'系统错误'
+    var userId=req.headers['userid']||''
+    async.waterfall([
+        function(callback){
+            var sqlAll=`select count(1) as total from red_list where userId=${userId} and create_time between '`+moment().format('YYYY-MM-DD 00:00:00')+ `' and '` + moment().format('YYYY-MM-DD 23:59:59') + `'`;
+            db.selectAll(sqlAll,(err,result)=>{
+                if (err) {
+                    console.log(err)
+                    return res.json({
+                        code:'500',
+                        msg:'系统错误'
+                    })
+                }
+                if (result[0].total!=0) {
+                    res.json({
+                        code:'200',
+                        data:{
+                            total:1,
+                            red_activity:1
+                        },
+                        msg:'ok'
+                    })
+                    callback(new Error("aaa"));
+                }else{
+                    callback(null,2);// 今日没领过红包 继续往下走
+                }
+            })
+        },
+        function(data, callback){
+            var sql=`select withdrawalMoney,red_activity,red_startTime,red_endTime from systems`
+            db.selectAll(sql,(err1,result)=>{
+                if (err1) {
+                    console.log(err1)
+                    callback(new Error("system error"));
+                    return res.json({
+                        code:'500',
+                        msg:'系统错误'
+                    })
+                }
+                var result=result[0]
+                result.total=0;
+                res.json({
+                    code:'200',
+                    data:result,
+                    msg:'ok'
+                })
+                callback(null,1);
             })
         }
-        res.json({
-            code:'200',
-            data:result[0],
-            msg:'ok'
-        })
-    })
+    ], function(err, results){
+        if (err) {
+           console.log('err err err',err);
+        }else{
+            // console.log('results',results);
+        }
+    }); 
 })
 
 
