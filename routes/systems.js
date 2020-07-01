@@ -174,6 +174,139 @@ router.post('/getRedParama',(req,res,next)=>{
 })
 
 
+// 后台 获取销售记录 后台 获取销售记录 后台 获取销售记录 后台 获取销售记录 后台 获取销售记录
+router.post('/getSalesRecord', function(req, res, next) {
+    var page=req.body.page||1;
+    var pageSize=req.body.pageSize||10;
+    var title=req.body.title||'';
+    // console.log(req.body)
+    var sqlAll=`select count(1) as total from zhu_sales_record `;
+    var total = '';
+    if (title!='') {
+        sqlAll+=` where username like ?`
+        sqlAll = db.mysql.format(sqlAll, title);
+    }
+    db.selectAll(sqlAll,(err,result)=>{
+        if (err) {
+            console.log(err)
+            return res.json({
+                code:'500',
+                msg:'系统错误'
+            })
+        }
+        total=result[0].total;
+
+        if (total==0) {
+            res.json({
+                code:'200',
+                page:page,
+                pageSize:pageSize,
+                totals:total,
+                list:[],
+                msg:'ok'
+            })
+            return
+        }
+
+        var sql=`select * from zhu_sales_record `;
+        if (title!='') {
+            sql+=`where username like ? order by create_time desc limit `+ (page-1)*pageSize+`,`+pageSize;
+            sql = db.mysql.format(sql, title);
+        }else{
+            sql+=`order by create_time desc limit `+ (page-1)*pageSize+`,`+pageSize;
+            sql = db.mysql.format(sql);
+        }
+        db.selectAll(sql,(err,result)=>{
+            if (err) {
+                console.log(err)
+                return res.json({
+                    code:'500',
+                    msg:'系统错误'
+                })
+            }
+            res.json({
+                code:'200',
+                page:page,
+                pageSize:pageSize,
+                totals:total,
+                list:result,
+                msg:'ok'
+            })
+        })
+    })
+});
+
+router.post('/recordAdd',(req,res,next)=>{
+    var saveDate={
+        username:req.body.username,
+        mobile:req.body.mobile,
+        adress:req.body.adress,
+        num:req.body.num,
+        price:req.body.price,
+        giftNum:req.body.giftNum,
+        postage:req.body.postage,
+        remark:req.body.remark,
+        create_time:moment().format('YYYY-MM-DD HH:mm:ss'),
+    }
+    db.insertData('zhu_sales_record',saveDate,(err,result)=>{
+        if (err) {
+            console.log(err)
+            return res.json({
+                code:'500',
+                msg:'系统错误'
+            })
+        } 
+        res.json({
+            code:'200',
+            msg:'ok'
+        })
+    })
+})
+
+router.post('/recordEdit',(req,res,next)=>{
+    var _where = {id : req.body.id};
+    var _set = {
+        username:req.body.username,
+        mobile:req.body.mobile,
+        adress:req.body.adress,
+        num:req.body.num,
+        price:req.body.price,
+        giftNum:req.body.giftNum,
+        postage:req.body.postage,
+        remark:req.body.remark,
+    };
+    db.updateData('zhu_sales_record',_set,_where,(err,result)=>{
+        if (err) {
+            console.log(err)
+            return res.json({
+                code:'500',
+                msg:'系统错误'
+            })
+        }
+
+        res.json({
+            code:'200',
+            msg:'ok'
+        })
+    })
+})
+
+router.post('/recordDel', (req, res, next) => {
+    db.deleteData('zhu_sales_record','id',req.body.id,(err,data)=>{
+        if (err) {
+            console.log(err)
+            return res.json({
+                code:'500',
+                msg:'系统错误'
+            })
+        }
+        res.json({
+            code:'200',
+            msg:'ok'
+        })
+    })
+})
+
 
 
 module.exports = router;

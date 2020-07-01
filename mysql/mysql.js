@@ -23,10 +23,10 @@ const pool = mysqlPool.getPool();
 */
 
 let selectAll = (sql, callback) => {
-    console.log(sql);
+    // console.log(sql);
     pool.query(sql,(err,result)=>{
         if (err) {
-            console.log('错误信息-', err.sqlMessage);
+            // console.log('错误信息-', err.sqlMessage);
             let errNews = err.sqlMessage;
             callback(errNews, '');
             return;
@@ -40,7 +40,7 @@ let selectAll = (sql, callback) => {
 
 // 插入一条数据
 let insertData = (table, datas, callback) => {
-    console.log(sql);
+    // console.log(sql);
     var fields = '';
     var values = '';
     for (var k in datas) {
@@ -73,7 +73,7 @@ let updateData = function (table, sets, where, callback) {
     // UPDATE user SET Password='321' WHERE UserId=12
     //update table set username='admin2',age='55'   where id="5";
     var sql = "UPDATE " + table + ' SET ' + _SETS + ' WHERE ' + _WHERE;
-    console.log(sql);
+    // console.log(sql);
     pool.query(sql, callback);
 }
 
@@ -88,7 +88,7 @@ let deleteData = function (table, key, where, callback) {
     // DELETE  FROM user WHERE UserId=12  注意UserId的数据类型要和数据库一致
     // var sql="DELETE  FROM "+table+' WHERE '+_WHERE;
     var sql = "DELETE  FROM " + table + ' WHERE ' + key + ' IN (' + where + ')';
-    console.log(sql);
+    // console.log(sql);
     pool.query(sql, callback);
 }
 
