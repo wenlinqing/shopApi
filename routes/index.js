@@ -4,117 +4,12 @@ var moment = require('moment');
 
 const pathLib = require('path');
 const fs = require('fs');
+const md5 = require('md5');
+
+var jwt = require('jsonwebtoken');
+var secretOrPrivateKey = "NHWJ8888"  //加密token 校验token时要使用
 
 var db = require('../mysql/mysql.js');
-// var alioss = require('../alioss.js');
-
-
-// 后台统计
-router.get('/api/admin/getMember', (req, res, next) => {
-    // 查询总用户
-    var sql = `select count(1) as allTotal from jgb_user`;
-    var allTotal = 0;
-    db.selectAll(sql, (err, result) => {
-        if (err) {
-            console.log(err)
-            return res.json({
-                code: '500',
-                msg: '系统错误'
-            })
-        }
-        allTotal = result[0].allTotal;
-    })
-
-    // 查询 今日新增
-    var sql2 = `select count(1) as todayTotal from jgb_user where create_time between '` + moment().format('YYYY-MM-DD 00:00:00') + `' and '` + moment().format('YYYY-MM-DD 23:59:59') + `'`;
-
-    var todayTotal = 0;
-    db.selectAll(sql2, (err, data) => {
-        if (err) {
-            console.log(err)
-            return res.json({
-                code: '500',
-                msg: '系统错误'
-            })
-        }
-        todayTotal = data[0].todayTotal;
-    })
-
-    // 查询 昨天
-    var sql2 = `select count(1) as yesTodayTotal from jgb_user where create_time between '` + moment().add(-1, 'days').format('YYYY-MM-DD 00:00:00') + `' and '` + moment().add(-1, 'days').format('YYYY-MM-DD 23:59:59') + `'`;
-
-    var yesTodayTotal = 0;
-    db.selectAll(sql2, (err, data) => {
-        if (err) {
-            console.log(err)
-            return res.json({
-                code: '500',
-                msg: '系统错误'
-            })
-        }
-        yesTodayTotal = data[0].yesTodayTotal;
-    })
-
-
-    // 查询 最近七天
-    var sql5 = `select count(1) as last7Days from jgb_user where create_time between '`
-        + moment().subtract(7, 'days').format('YYYY-MM-DD 00:00:00') + `' and '` + moment().subtract(1, 'days').format('YYYY-MM-DD 23:59:59') + `'`;
-    var last7Days = 0;
-    db.selectAll(sql5, (err, data) => {
-        if (err) {
-            console.log(err)
-            return res.json({
-                code: '500',
-                msg: '系统错误'
-            })
-        }
-        last7Days = data[0].last7Days;
-    })
-
-    // 查询 当月
-    var sql3 = `select count(1) as curMonth from jgb_user where create_time between '`
-        + moment().add(0, 'month').format('YYYY-MM-01 00:00:00') + `' and '` + moment(moment().add(0, 'month').format('YYYY-MM-01 00:00:00')).add(1, 'month').add(-1, 'days').format('YYYY-MM-DD 23:59:59') + `'`;
-    var curMonth = 0;
-    db.selectAll(sql3, (err, data) => {
-        if (err) {
-            console.log(err)
-            return res.json({
-                code: '500',
-                msg: '系统错误'
-            })
-        }
-        curMonth = data[0].curMonth;
-    })
-
-    // 查询 上月
-    var sql4 = `select count(1) as passMonth from jgb_user where create_time between '`
-        + moment().add(-1, 'month').format('YYYY-MM-01 00:00:00') + `' and '` + moment(moment().add(-1, 'month').format('YYYY-MM-01 00:00:00')).subtract(-1, 'month').add(-1, 'days').format('YYYY-MM-DD 23:59:59') + `'`;
-    var passMonth = 0;
-    db.selectAll(sql4, (err, data) => {
-        if (err) {
-            console.log(err)
-            return res.json({
-                code: '500',
-                msg: '系统错误'
-            })
-        }
-        passMonth = data[0].passMonth;
-
-        res.json({
-            code: '200',
-            data: {
-                allTotal: allTotal,
-                todayTotal: todayTotal,
-                yesTodayTotal: yesTodayTotal,
-
-                last7Days: last7Days,
-                curMonth: curMonth,
-                passMonth: passMonth,
-            },
-            msg: 'ok'
-        })
-    })
-})
 
 
 // web接口  web接口  web接口  web接口  web接口  web接口  web接口  web接口  web接口
@@ -123,8 +18,8 @@ router.get('/api/admin/getMember', (req, res, next) => {
 router.post('/api/login', (req, res, next) => {
     var mobile = req.body.mobile;
     var password = req.body.password;
-    var type = req.body.type||req.headers['authorization'];
-    // console.log(type,req.headers['authorization'])
+    var type = req.body.type||req.headers['roletype'];
+    // console.log(type,req.headers['roletype'])
     
     if (type == 'web' || type=='admin') {
         var sql = `select * from users where mobile=?`;
@@ -156,16 +51,19 @@ router.post('/api/login', (req, res, next) => {
         if (result[0].locked != 0) { //  0可用  1冻结
             return res.json({
                 code: '444',
-                msg: '该账号已冻结，请联系管理员'
+                msg: '该账号已冻结，请联系客服'
             })
         }
 
         delete result[0].password // 删除 登录密码字段
         delete result[0].locked // 删除字段
-        req.session.user=result[0];
-        // console.log(req.session.user,req.session.user.mobile)
-        // res.cookie('session', result[0], {maxAge: 60000})
-
+        
+        result[0].token='Bearer '+jwt.sign({
+            tokenId: result[0].userId,
+            data: result[0]
+        }, secretOrPrivateKey, {
+            expiresIn: '7d'
+        })
         return res.json({
             code: '200',
             userInfo: result[0],
@@ -370,7 +268,6 @@ router.post('/api/queryUserInfo', (req, res, next) => {
 
 // 退出登录
 router.post('/api/loginOut', (req, res, next) => {
-    res.clearCookie();
     res.json({
         code: '200',
         msg: 'ok'

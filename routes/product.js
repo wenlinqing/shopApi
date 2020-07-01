@@ -28,7 +28,7 @@ router.post('/getDataList', function(req, res, next) {
 	var pageSize=req.body.pageSize||10;
 	var title=req.body.title||'';
 
-	var types=req.headers['authorization'];
+	var types=req.headers['roletype']||'web';
 	if (types=='admin') {
 		var sqlAll=`select count(1) as total from products `;
 		var total = '';
@@ -125,6 +125,8 @@ router.post('/productAdd',(req,res,next)=>{
         newComerPrice:req.body.newComerPrice,
         promotePrice:req.body.promotePrice,
         unit:req.body.unit,
+        limitNum:req.body.limitNum,
+        soldAmount:req.body.soldAmount,
         create_time:moment().format('YYYY-MM-DD HH:mm:ss'),
 	}
 	db.insertData('products',saveDate,(err,result)=>{
@@ -151,6 +153,8 @@ router.post('/productEdit',(req,res,next)=>{
         newComerPrice:req.body.newComerPrice,
         promotePrice:req.body.promotePrice,
         unit:req.body.unit,
+        limitNum:req.body.limitNum,
+        soldAmount:req.body.soldAmount,
     };
 	db.updateData('products',_set,_where,(err,result)=>{
 		if (err) {

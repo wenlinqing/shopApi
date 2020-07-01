@@ -101,7 +101,7 @@ router.post('/incomeInfos',(req,res,next)=>{
 		var dataObj={}
 		for (var i = 0; i < result.length; i++) {
 			var data=result[i]
-			console.log(data[0])
+			// console.log(data[0])
 			Object.assign(dataObj,data[0])
 		}
 		for(var key in dataObj){
@@ -110,7 +110,7 @@ router.post('/incomeInfos',(req,res,next)=>{
 				dataObj[key]=0
 			}
 		}
-		console.log('dataObj===',dataObj)
+		// console.log('dataObj===',dataObj)
 		res.json({
 			code:'200',
 			data:dataObj,
@@ -148,10 +148,10 @@ router.post('/orderCounts',(req,res,next)=>{
 		var dataObj={}
 		for (var i = 0; i < result.length; i++) {
 			var data=result[i]
-			console.log(data[0])
+			// console.log(data[0])
 			Object.assign(dataObj,data[0])
 		}
-		console.log('dataObj===',dataObj)
+		// console.log('dataObj===',dataObj)
 		res.json({
 			code:'200',
 			data:dataObj,
@@ -197,14 +197,14 @@ router.post('/7daysInfo',(req,res,next)=>{
 				var emptyAry=[]
 				for (var i = 0; i < result.length; i++) {
 					var data=result[i]
-					console.log(data[0])
+					// console.log(data[0])
 					if (data[0].amount==null) {
 						data[0].amount=0
 					}
 					emptyAry.unshift(data[0].amount)
 				}
 				dataObj.data=emptyAry
-				console.log('emptyAry===',emptyAry,'dataObj===',dataObj)
+				// console.log('emptyAry===',emptyAry,'dataObj===',dataObj)
 				callback(null,dataObj);
 			})
 		},
@@ -235,7 +235,7 @@ router.post('/7daysInfo',(req,res,next)=>{
 				var emptyAry=[]
 				for (var i = 0; i < result.length; i++) {
 					var data=result[i]
-					console.log(data[0])
+					// console.log(data[0])
 					if (data[0].amount==null) {
 						data[0].amount=0
 					}
@@ -244,7 +244,7 @@ router.post('/7daysInfo',(req,res,next)=>{
 				dataObj.data=emptyAry
 				callback(null,dataObj);
 				resultData.push(dataObj)
-				console.log('resultData===',resultData)
+				// console.log('resultData===',resultData)
 				res.json({
 					code:'200',
 					data:resultData,
@@ -288,7 +288,7 @@ router.post('/applyForWithdrawal',(req,res,next)=>{
 					})
 				}
 				var available=result[0].amount_available
-				console.log('available=',available)
+				// console.log('available=',available)
 				if (available>=req.body.money) { // 可用金额 必须大于 提现申请金额
 					callback(null,1);
 				}else{
@@ -323,7 +323,7 @@ router.post('/applyForWithdrawal',(req,res,next)=>{
 			})
 		},
 		function(text, callback){// 提现申请成功
-			console.log('Withdrawal application amount===',req.body.money)
+			// console.log('Withdrawal application amount===',req.body.money)
 			var saveDate={
 				riderId:req.body.riderId,
 				money:req.body.money,
@@ -342,7 +342,7 @@ router.post('/applyForWithdrawal',(req,res,next)=>{
 			})
 		},
 		function(text, callback){// 冻结骑手可用资产
-			console.log('Rider amount_available will freeze===',req.body.money)
+			// console.log('Rider amount_available will freeze===',req.body.money)
 			var updateSql = `update riders set amount_available=amount_available-${req.body.money},frozen_amount=frozen_amount+${req.body.money} where riderId=${req.body.riderId}`;
 			db.connection.query(updateSql, (error, results) => {
 				if (error) {
@@ -434,7 +434,7 @@ router.post('/admin/checkApply',(req,res,next)=>{
 
 //骑手提现申请记录 骑手提现申请记录 骑手提现申请记录 骑手提现申请记录 骑手提现申请记录 骑手提现申请记录 骑手提现申请记录 骑手提现申请记录
 router.post('/applyList',(req,res,next)=>{
-	var types=req.headers['authorization'];
+	var types=req.headers['roletype'];
 	if (types!='admin') {// 骑手自查
 		if (!req.body.riderId) {
 			res.json({

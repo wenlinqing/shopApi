@@ -2,9 +2,12 @@ var createError = require('http-errors');
 var express = require('express');
 var path = require('path');
 var cookieParser = require('cookie-parser');
-const session = require('express-session');
 var logger = require('morgan');
 const multer = require('multer');
+
+var expressJWT = require('express-jwt')
+
+// var jwt = require('jsonwebtoken');
 
 var app = express();
 
@@ -26,28 +29,9 @@ app.set('view engine', 'ejs');
 app.use(logger('dev'));
 app.use(express.json());
 app.use(express.urlencoded({extended: false}));
-
-
 app.use(cookieParser());
-app.use(session({
-    secret: '@123456@',
-    name: 'sessions',
-    cookie:{maxAge: 600000},
-    resave:false,
-    saveUninitialized:true
-}));
 
 
-
-
-
-// app.use(multer({dest:'./public/upload'}).any());
-
-//处理图片缩放
-// app.use('/', require('./routes/image'));
-
-// app.use(multer({dest: '/www/newwww/images'}).any());
-// app.use('/public', express.static(__dirname + '/public'));
 
 
 app.use('/shopApi/', require('./routes/index'));
@@ -63,28 +47,27 @@ app.use(function (req, res, next) {
     next(createError(404));
 });
 
-// error handler
-app.use(function (err, req, res, next) {
-    // set locals, only providing error in development
-    res.locals.message = err.message;
-    res.locals.error = req.app.get('env') === 'development' ? err : {};
+var secretOrPrivateKey = "NHWJ8888"  //加密token 校验token时要使用
+app.use(expressJWT({
+    secret: secretOrPrivateKey,
+    // credentialsRequired: false
+}).unless({//除了这个地址，其他的URL都需要验证
+    path: [
+        '/shopApi/api/regist',
+        '/shopApi/api/login',
+        '/shopApi/api/product/getDataList'
+    ]
+}));
 
-    // render the error page
-    res.status(err.status || 500);
-    res.render('error');
+
+app.use(function (error, req, res, next) {
+    if (error.name === 'UnauthorizedError') {   
+        return res.json({
+            code: 401,
+            msg: error.message
+        })
+    }
 });
-
-
-var moment = require('moment');
-var schedule = require('node-schedule');
-
-function scheduleCronstyle(){
-    schedule.scheduleJob('40 30 11 2 4 *', function(){
-        console.log('scheduleCronstyle:' + moment().format('YYYY-MM-DD HH:mm:ss'));
-    });  
-}
-scheduleCronstyle();
-
 
 
 module.exports = app;

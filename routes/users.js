@@ -352,7 +352,7 @@ router.post('/web/recharge',(req,res,next)=>{
 
 // 用户充值申请记录 用户充值申请记录 用户充值申请记录 用户充值申请记录 用户充值申请记录 用户充值申请记录 用户充值申请记录 用户充值申请记录
 router.post('/web/userAssetsDetail',(req,res,next)=>{
-	var types=req.headers['authorization'];
+	var types=req.headers['roletype'];
 	if (types!='admin') {// 用户自查
 		if (!req.body.userId) {
 			res.json({

@@ -235,7 +235,7 @@ router.post('/createOrder',(req,res,next)=>{
 		    var numAry=req.body.productCounts;
 		    var idsAry=req.body.productIds;
 		    for(var i = 0; i < numAry.length; i++) {
-				var updateSql = `update products set amount=amount+${numAry[i]} where productId=${idsAry[i]}`;
+				var updateSql = `update products set amount=amount+${numAry[i]},soldAmount=soldAmount-${numAry[i]} where productId=${idsAry[i]}`;
 			    // console.log(numAry[i],idsAry[i],)
 			    db.connection.query(updateSql, (error, results) => {
 			        if (error) {
@@ -269,6 +269,10 @@ router.post('/createOrder',(req,res,next)=>{
 			        callback(null,'create order ok');
 			    })
 	    	}else{
+	    		res.json({
+					code:'200',
+					msg:'ok'
+				})
 	    		callback(null,'create order ok');
 	    	}
 				
@@ -363,7 +367,7 @@ router.post('/rider/orderAction',(req,res,next)=>{
 				}else if (status==1&&isDelive==0&&(action==2||action==4)) {// 订单还没完成  继续往下走
 					callback(null,'ok');
 				}else{// 订单已完成  记录被人恶搞次数
-					/*var updateSql = `update riders set illegal_operations=illegal_operations+1 where riderId=${req.body.riderId}`;
+					var updateSql = `update riders set illegal_operations=illegal_operations+1 where riderId=${req.body.riderId}`;
 				    db.connection.query(updateSql, (error, results) => {
 				        if (error) {
 				            console.log(error)
@@ -373,13 +377,13 @@ router.post('/rider/orderAction',(req,res,next)=>{
 				                msg: '系统错误'
 				            })
 				        }
-				        console.log('请勿非法操作，否则收益将冻结')
+				        // console.log('请勿非法操作，否则收益将冻结')
 				        callback(new Error("Do not operate illegally"));
 				        return res.json({
 							code:'500',
 							msg:'请勿非法操作，否则收益将冻结'
 						})
-				    })*/
+				    })
 				    callback(new Error("Do not operate illegally"));
 			        return res.json({
 						code:'500',
