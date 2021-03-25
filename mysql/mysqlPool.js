@@ -4,11 +4,10 @@ class MysqlPool {
   constructor(){
     this.flag = true;
     this.pool = mysql.createPool({
+        // host:'121.36.203.217',
         host:'localhost',
-        host:'120.78.72.112',
-        // user:'root',
-        // password:'123456',
-        password:'',
+        user:'root',
+        password:'123456',
         database: 'database',
         charset: 'UTF8MB4_GENERAL_CI',
         multipleStatements: true //允许执行多条语句
