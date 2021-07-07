@@ -34,12 +34,12 @@ app.use(cookieParser());
 
 
 
-app.use('/shopApi/', require('./routes/index'));
-app.use('/shopApi/api/users', require('./routes/users'));
-app.use('/shopApi/api/product', require('./routes/product'));
-app.use('/shopApi/api/order', require('./routes/order'));
-app.use('/shopApi/api/riders', require('./routes/riders'))
-app.use('/shopApi/api/systems', require('./routes/systems'));
+app.use('/', require('./routes/index'));
+app.use('/api/users', require('./routes/users'));
+app.use('/api/product', require('./routes/product'));
+app.use('/api/order', require('./routes/order'));
+app.use('/api/riders', require('./routes/riders'))
+app.use('/api/systems', require('./routes/systems'));
 
 
 // catch 404 and forward to error handler
@@ -53,9 +53,9 @@ app.use(expressJWT({
     // credentialsRequired: false
 }).unless({//除了这个地址，其他的URL都需要验证
     path: [
-        '/shopApi/api/regist',
-        '/shopApi/api/login',
-        '/shopApi/api/product/getDataList'
+        '/api/regist',
+        '/api/login',
+        '/api/product/getDataList'
     ]
 }));
 

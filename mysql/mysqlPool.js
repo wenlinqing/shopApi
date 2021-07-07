@@ -4,8 +4,8 @@ class MysqlPool {
   constructor(){
     this.flag = true;
     this.pool = mysql.createPool({
-        // host:'121.36.203.217',
-        host:'localhost',
+        host:'192.168.238.130',
+        // host:'localhost',
         user:'root',
         password:'123456',
         database: 'database',
